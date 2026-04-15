@@ -8,10 +8,5 @@ public class CarrelloAbstractApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(CarrelloAbstractApplication.class, args);
-	
-	//commit
 	}
-	
-	
-
 }
