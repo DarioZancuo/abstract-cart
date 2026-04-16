@@ -28,22 +28,24 @@ public class CartService {
     private final ProductRepository productRepository;
 
     //getCart
-    public CartResponse getCart(Long userId) {
-        CartRedis cart = getOrCreateCart(userId);
+    public CartResponse getCart(String username) {
+        CartRedis cart = getOrCreateCart(username);
         return saveAndBuildResponse(cart);
     }
 
     //addItem
     @Transactional(readOnly = true)
-    public CartResponse addItem(Long userId, AddItemCartRequest request) {
+    public CartResponse addItem(String username, AddItemCartRequest request) {
         validateQuantity(request.quantity());
 
         Product product = getProductOrThrow(request.productId());
-        CartRedis cart = getOrCreateCart(userId);
+        
+        CartRedis cart = getOrCreateCart(username);
 
         CartItemRedis existingItem = findCartItem(cart, product.getId());
 
         if (existingItem != null) {
+        	System.out.println("prodotto nel carrello");
             int newQuantity = existingItem.getQuantity() + request.quantity();
             existingItem.setQuantity(newQuantity);
             existingItem.setSubtotal(existingItem.getUnitPrice()
@@ -64,10 +66,10 @@ public class CartService {
     }
 
     //udpdateItemQty
-    public CartResponse updateItemQuantity(Long userId, UpdateQtyRequest request) {
+    public CartResponse updateItemQuantity(String username, UpdateQtyRequest request) {
         validateQuantity(request.quantity());
 
-        CartRedis cart = getCartOrThrow(userId);
+        CartRedis cart = getCartOrThrow(username);
         CartItemRedis item = getCartItemOrThrow(cart, request.productId());
 
         item.setQuantity(request.quantity());
@@ -77,8 +79,8 @@ public class CartService {
     }
 
     //removeItem
-    public CartResponse removeItem(Long userId, Long productId) {
-        CartRedis cart = getCartOrThrow(userId);
+    public CartResponse removeItem(String username, Long productId) {
+        CartRedis cart = getCartOrThrow(username);
 
         CartItemRedis item = getCartItemOrThrow(cart, productId);
         cart.getItems().remove(item);
@@ -87,8 +89,8 @@ public class CartService {
     }
 
     //clearCart
-    public void clearCart(Long userId) {
-        cartRedisRepository.deleteById(buildCartId(userId));
+    public void clearCart(String username) {
+        cartRedisRepository.deleteById(buildCartId(username));
     }
 
     // Helpers
@@ -98,21 +100,21 @@ public class CartService {
                 .orElseThrow(() -> new NotFoundException("Product not found with id: " + productId));
     }
 
-    private CartRedis getOrCreateCart(Long userId) {
-        return cartRedisRepository.findById(buildCartId(userId))
+    private CartRedis getOrCreateCart(String username) {
+        return cartRedisRepository.findById(buildCartId(username))
                 .orElseGet(() -> CartRedis.builder()
-                        .id(buildCartId(userId))
-                        .userId(userId)
+                        .id(username)
                         .items(new ArrayList<>())
                         .totalPrice(BigDecimal.ZERO)
                         .totalQuantity(0)
                         .ttl(CART_TTL_SECONDS)
                         .build());
+        
     }
 
-    private CartRedis getCartOrThrow(Long userId) {
-        return cartRedisRepository.findById(buildCartId(userId))
-                .orElseThrow(() -> new NotFoundException("Cart not found for user: " + userId));
+    private CartRedis getCartOrThrow(String username) {
+        return cartRedisRepository.findById(buildCartId(username))
+                .orElseThrow(() -> new NotFoundException("Cart not found for user: " + username));
     }
 
     private CartItemRedis findCartItem(CartRedis cart, Long productId) {
@@ -135,8 +137,8 @@ public class CartService {
         }
     }
 
-    private String buildCartId(Long userId) {
-        return "cart:user:" + userId;
+    private String buildCartId(String username) {
+        return "cart:user:" + username;
     }
 
     private void recalculateCart(CartRedis cart) {
@@ -162,7 +164,6 @@ public class CartService {
     private CartResponse toResponse(CartRedis cart) {
         return new CartResponse(
                 cart.getId(),
-                cart.getUserId(),
                 cart.getItems().stream()
                         .map(item -> new CartItemResponse(
                                 item.getProductId(),

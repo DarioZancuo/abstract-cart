@@ -24,8 +24,6 @@ public class CartRedis implements Serializable {
     @Id
     private String id;
 
-    private Long userId;
-
     @Builder.Default
     private List<CartItemRedis> items = new ArrayList<>();
 

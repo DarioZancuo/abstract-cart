@@ -10,6 +10,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,39 +22,39 @@ public class CartController {
 
     private final CartService cartService;
 
-    @GetMapping("/{userId}")
-    public ApiResponse<CartResponse> getCart(@PathVariable Long userId) {
-    	log.info("GET cart - userId={}", userId);
+    @GetMapping
+    public ApiResponse<CartResponse> getCart(@AuthenticationPrincipal UserDetails userDetails) {
+    	log.info("GET cart - userId={}", userDetails.getUsername());
     	
-        return ApiResponse.success("Cart retrieved successfully", cartService.getCart(userId));
+        return ApiResponse.success("Cart retrieved successfully", cartService.getCart(userDetails.getUsername()));
     }
 
-	@PostMapping("/{userId}/items")
-	public ApiResponse<CartResponse> addItem(@PathVariable Long userId, @Valid @RequestBody AddItemCartRequest request) {
-	    log.info("ADD item - userId={}, productId={}, quantity={}", userId, request.productId(), request.quantity());
+	@PostMapping("/additems")
+	public ApiResponse<CartResponse> addItem(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody AddItemCartRequest request) {
+	    log.info("ADD item - userId={}, productId={}, quantity={}", userDetails.getUsername(), request.productId(), request.quantity());
 		
-		return ApiResponse.success("Item added to cart", cartService.addItem(userId, request));
+		return ApiResponse.success("Item added to cart", cartService.addItem(userDetails.getUsername(), request));
 	}
 
-	@PutMapping("/{userId}/items")
-	public ApiResponse<CartResponse> updateItemQuantity(@PathVariable Long userId, @Valid @RequestBody UpdateQtyRequest request) {		
-	    log.info("UPDATE item qty - userId={}, productId={}, quantity={}", userId, request.productId(), request.quantity());
+	@PutMapping("/updateitems")
+	public ApiResponse<CartResponse> updateItemQuantity(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody UpdateQtyRequest request) {		
+	    log.info("UPDATE item qty - userId={}, productId={}, quantity={}", userDetails.getUsername(), request.productId(), request.quantity());
 		
-		return ApiResponse.success("Cart item updated", cartService.updateItemQuantity(userId, request));
+		return ApiResponse.success("Cart item updated", cartService.updateItemQuantity(userDetails.getUsername(), request));
 	}
 
-	@DeleteMapping("/{userId}/items/{productId}")
-	public ApiResponse<CartResponse> removeItem(@PathVariable Long userId, @PathVariable Long productId) {	
-		log.info("REMOVE item - userId={}, productId={}", userId, productId);
+	@DeleteMapping("/{productId}")
+	public ApiResponse<CartResponse> removeItem(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long productId) {	
+		log.info("REMOVE item - userId={}, productId={}", userDetails.getUsername(), productId);
 		
-		return ApiResponse.success("Item removed from cart", cartService.removeItem(userId, productId));
+		return ApiResponse.success("Item removed from cart", cartService.removeItem(userDetails.getUsername(), productId));
 	}
 
-    @DeleteMapping("/{userId}")
-    public ApiResponse<Void> clearCart(@PathVariable Long userId) {
-    	log.warn("CLEAR cart - userId={}", userId);
+    @DeleteMapping
+    public ApiResponse<Void> clearCart(@AuthenticationPrincipal UserDetails userDetails) {
+    	log.warn("CLEAR cart - userId={}", userDetails.getUsername());
     	
-        cartService.clearCart(userId);
+        cartService.clearCart(userDetails.getUsername());
         return ApiResponse.success("Cart cleared", null);
     }
 }
