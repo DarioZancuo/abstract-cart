@@ -18,6 +18,6 @@ public class Cart implements Serializable {
 	
 	@Id
 	private String id_cart;
-	User user;
+	User user; 
 	private List<Product> products = new ArrayList<>();
 }
