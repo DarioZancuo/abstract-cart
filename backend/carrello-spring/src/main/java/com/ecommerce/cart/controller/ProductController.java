@@ -3,6 +3,7 @@ package com.ecommerce.cart.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,71 +19,92 @@ import com.ecommerce.cart.service.ProductService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/products")
-@Slf4j
 @RequiredArgsConstructor
+@Slf4j
+@Validated
 @Tag(name = "Product Controller", description = "API per la gestione del catalogo prodotti")
 public class ProductController {
 
-	private final ProductService service;
+    private final ProductService service;
 
-	@Operation(summary = "Ottieni tutti i prodotti", description = "Ritorna una lista completa di tutti i prodotti a catalogo")
-	@GetMapping
-	public ResponseEntity<List<ProductDTO>> getAllProducts() {
-		log.info("return all products");
+    @Operation(
+        summary = "Ottieni tutti i prodotti",
+        description = "Ritorna una lista completa di tutti i prodotti a catalogo"
+    )
+    @GetMapping
+    public ResponseEntity<List<ProductDTO>> getAllProducts() {
+        log.info("return all products");
+        return ResponseEntity.ok(service.findAll());
+    }
 
-		return ResponseEntity.ok(service.findAll());
-	}
+    @Operation(
+        summary = "Recupera un prodotto per ID",
+        description = "Fornisce i dettagli di un singolo prodotto cercato tramite il suo identificativo univoco"
+    )
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable @Positive Long id) {
+        log.info("get product by id: {}", id);
+        return ResponseEntity.ok(service.findById(id));
+    }
 
-	
-	@Operation(summary = "Recupera un prodotto per ID", description = "Fornisce i dettagli di un singolo prodotto cercato tramite il suo identificativo univoco")
-	@GetMapping("/{id}")
-	public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
-		log.info("get product by id");
+    @Operation(
+        summary = "Crea un nuovo prodotto",
+        description = "Aggiunge un nuovo prodotto al database. L'ID viene generato automaticamente"
+    )
+    @PostMapping
+    public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO dto) {
+        log.info("create product");
+        return ResponseEntity.ok(service.create(dto));
+    }
 
-		return ResponseEntity.ok(service.findById(id));
-	}
-	
-	@Operation(summary = "Crea un nuovo prodotto", description = "Aggiunge un nuovo prodotto al database. L'ID viene generato automaticamente.")
-	@PostMapping
-	public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO dto) {
-		log.info("create product");
+    @Operation(
+        summary = "Aggiorna un prodotto esistente",
+        description = "Modifica i dati di un prodotto esistente identificato dall'ID"
+    )
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductDTO> updateProduct(
+            @Valid @RequestBody ProductDTO dto,
+            @PathVariable @Positive Long id) {
+        log.info("update product: {}", id);
+        return ResponseEntity.ok(service.update(dto, id));
+    }
 
-		return ResponseEntity.ok(service.create(dto));
-	}
-	
-	@Operation(summary = "Aggiorna un prodotto esistente", description = "Modifica i dati di un prodotto esistente identificato dall'ID")
-	@PutMapping("/{id}")
-	public ResponseEntity<ProductDTO> updateProduct(@RequestBody ProductDTO dto, @PathVariable Long id) {
-		log.info("update product");
-		return ResponseEntity.ok(service.update(dto, id));
+    @Operation(
+        summary = "Elimina un prodotto per ID",
+        description = "Rimuove definitivamente il prodotto dal sistema"
+    )
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable @Positive Long id) {
+        log.info("delete product: {}", id);
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 
-	}
-	
-	@Operation(summary = "Elimina un prodotto per ID", description = "Rimuove definitivamente il prodotto dal sistema")	
-	@DeleteMapping("/{id}")
-	public void delete(@PathVariable Long id) {
-		log.info("delete product");
+    @Operation(
+        summary = "Filtra prodotti per categoria",
+        description = "Restituisce una lista di prodotti appartenenti a una specifica categoria"
+    )
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<ProductDTO>> getByCategory(@PathVariable @Positive Long categoryId) {
+        log.info("get products by category id: {}", categoryId);
+        return ResponseEntity.ok(service.findByCategory(categoryId));
+    }
 
-		service.delete(id);
-	}
-
-	@Operation(summary = "Filtra prodotti per categoria", description = "Restituisce una lista di prodotti appartenenti a una specifica categoria")
-	@GetMapping("/category/{categoryId}")
-	public ResponseEntity<List<ProductDTO>> getByCategory(@PathVariable Long categoryId) {
-		log.info("get products by category id: {}", categoryId);
-		return ResponseEntity.ok(service.findByCategory(categoryId));
-	}
-
-	@Operation(summary = "Cerca prodotti per nome", description = "Esegue una ricerca testuale nel catalogo prodotti")
-	@GetMapping("/search")
-	public ResponseEntity<List<ProductDTO>> searchByName(@RequestParam String name) {
-		log.info("search products by name: {}", name);
-		return ResponseEntity.ok(service.searchByName(name));
-	}
-
+    @Operation(
+        summary = "Cerca prodotti per nome",
+        description = "Esegue una ricerca testuale nel catalogo prodotti"
+    )
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductDTO>> searchByName(@RequestParam @NotBlank String name) {
+        log.info("search products by name: {}", name);
+        return ResponseEntity.ok(service.searchByName(name));
+    }
 }
