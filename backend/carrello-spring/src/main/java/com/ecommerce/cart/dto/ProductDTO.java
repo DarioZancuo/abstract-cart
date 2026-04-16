@@ -9,6 +9,7 @@ public record ProductDTO(
 	    String name, 
 	    String description,
 	    BigDecimal price,
+	    String imgUrl,
 	    Long id_cat,
 	    String categoryName
 	    

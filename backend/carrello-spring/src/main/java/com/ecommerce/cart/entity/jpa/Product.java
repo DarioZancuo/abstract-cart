@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -34,8 +35,9 @@ public class Product {
 	@Column(name="c_price", nullable = false)
 	private BigDecimal price;
 	
-	
-	
+	@Lob 
+	@Column(name="c_img", length=1000)
+	private String imgUrl;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)

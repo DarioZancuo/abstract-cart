@@ -44,6 +44,7 @@ public class ProductService {
 		product.setDescription(dto.description());
 		product.setPrice(dto.price());
 		product.setCategory(category);
+		product.setImgUrl(dto.imgUrl());
 
 		Product saved = repository.save(product);
 		log.info("Prodotto creato con id: {}", saved.getId());
@@ -61,6 +62,7 @@ public class ProductService {
 		product.setDescription(dto.description());
 		product.setPrice(dto.price());
 		product.setCategory(category);
+		product.setImgUrl(dto.imgUrl());
 
 		Product saved = repository.save(product);
 		log.info("Prodotto aggiornato con id: {}", saved.getId());
@@ -78,7 +80,7 @@ public class ProductService {
 	// Metodo helper per la conversione (o usa MapStruct in futuro)
 	private ProductDTO convertToDTO(Product p) {
 		var cat = p.getCategory();
-		return new ProductDTO(p.getId(), p.getName(), p.getDescription(), p.getPrice(), cat.getId(), cat.getName());
+		return new ProductDTO(p.getId(), p.getName(), p.getDescription(), p.getPrice(), p.getImgUrl(), cat.getId(), cat.getName());
 	}
 
 	public List<ProductDTO> findByCategory(Long categoryId) {
