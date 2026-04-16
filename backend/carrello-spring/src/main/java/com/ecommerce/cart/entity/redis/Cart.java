@@ -1,4 +1,4 @@
-package com.ecommerce.cart.entity.jpa;
+package com.ecommerce.cart.entity.redis;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+
+import com.ecommerce.cart.entity.jpa.User;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +20,6 @@ public class Cart implements Serializable {
 	
 	@Id
 	private String id_cart;
-	User user; 
-	private List<Product> products = new ArrayList<>();
+	private User user; 
+	private List<CartItem> products = new ArrayList<>();
 }
